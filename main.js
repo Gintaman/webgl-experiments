@@ -44,6 +44,9 @@ function setupShaders() {
 	//so gl.getAttribLocation returns the location where the attribute aVertexPosition (defined 
 	//in the vertex shader script source) has been bound to
 	shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, 'aVertexPosition');
+	let test = gl.getAttribLocation(shaderProgram, 'a_test');
+	console.log(test);
+	console.log(shaderProgram.vertexPositionAttribute);
 }
 
 function setupBuffers() {
