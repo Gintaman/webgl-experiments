@@ -25,7 +25,7 @@ let createProgram = function(gl, vertexShader, fragmentShader) {
 
 let main = function() {
 	let canvas = document.getElementById("canvas");
-	let gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+	let gl = canvas.getContext("webgl2");
 
 	let vertexShaderSource = document.getElementById("vertexShader").text;
 	let fragmentShaderSource = document.getElementById("fragmentShader").text;
@@ -35,25 +35,29 @@ let main = function() {
 
 	let program = createProgram(gl, vertexShader, fragmentShader);
 
-	let positionAttributeLocation = gl.getAttribLocation(program, "a_position");
+	let positionAttributeLocation = gl.getAttribLocation(program, "in_position");
 
 	let positionBuffer = gl.createBuffer();
 	gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 	let positions = [
-		10, 20,
-		80, 20,
-		10, 30,
-		10, 30,
-		80, 20,
-		80, 30
+        -1.0, -1.0,
+        -1.0, 1.0,
+        1.0, 1.0,
+        1.0, 1.0,
+        1.0, -1.0,
+        -1.0, -1.0
 	];
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+
+    let vao = gl.createVertexArray();
+    gl.bindVertexArray(vao);
 
 	gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 	gl.clearColor(0, 0, 0, 0);
 	gl.clear(gl.COLOR_BUFFER_BIT);
 
 	gl.useProgram(program);
+    gl.bindVertexArray(vao);
 	gl.enableVertexAttribArray(positionAttributeLocation); //supply shader with buffer we set above
 	let size = 2;
 	let type = gl.FLOAT;
@@ -63,21 +67,29 @@ let main = function() {
 	gl.vertexAttribPointer(positionAttributeLocation, size, type, normalize, stride, offset);
 
 	let primitiveType = gl.TRIANGLES;
-	let count = 6;
+	let count = 6; //3 vertices. each point tuple (0, -100) is one vertex -> one invocation of the vertex shader
 
 	let resolutionUniformLocation = gl.getUniformLocation(program, "u_resolution");
 	gl.uniform2f(resolutionUniformLocation, gl.canvas.width, gl.canvas.height);
 
-	let timeUniformLocation = gl.getUniformLocation(program, "u_time");
-	let color = 0.0;
-	let randomizeColor = function(color) {
-		color = Math.abs(Math.sin(Date.now()));
-		requestAnimationFrame(randomizeColor);
-		gl.uniform1f(timeUniformLocation, Math.abs(Math.sin(Date.now() / 1000)));
-
+	//let uRedLocation = gl.getUniformLocation(program, "u_red");
+    //let uBlueLocation = gl.getUniformLocation(program, "u_blue");
+    let uTimeLocation = gl.getUniformLocation(program, "u_time");
+    let i = 0;
+	let changeColor = function() {
+		//gl.uniform1f(uRedLocation, Math.abs(Math.sin(Date.now() / 1000)));
+        //gl.uniform1f(uBlueLocation, Math.abs(Math.sin(Date.now() / 1000)));
+        //gl.uniform1f(uTimeLocation, Math.sin(Date.now()));
+        //gl.uniform1f(uTimeLocation, Date.now() / 1000.0);
+        //console.log(Date.now() / 1000.0);
+        gl.uniform1f(uTimeLocation, Date.now());
+        //gl.uniform1f(uTimeLocation, (i++) / 1000);
 		gl.drawArrays(primitiveType, offset, count);
+		requestAnimationFrame(changeColor);
 	};
-	randomizeColor(color);
+	changeColor();
+    
+
 };
 
 

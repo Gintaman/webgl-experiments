@@ -6,21 +6,49 @@
 </head>
 <body>
 	<canvas id="canvas" width="500" height="500"></canvas>
-	<script id="vertexShader" type="x-shader/x-vertex">
-		attribute vec2 a_position;
-		uniform vec2 u_resolution;
+	<script id="vertexShader" type="x-shader/x-vertex">#version 300 es
+        precision highp float;
+		in vec3 in_position;
+
+        out vec4 v_color;
 		void main() {
-			vec2 zeroToOne = a_position / u_resolution;
-			vec2 zeroToTwo = zeroToOne * 2.0;
-			vec2 clipSpace = zeroToTwo - 1.0;
-			gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);
+			gl_Position = vec4(in_position, 1.0);
+            v_color = gl_Position * 0.5 + 0.5; //only called 3 times, once for each vertex
+            //but the fragment shader is called once for each pixel, and interpolates the v_color value
+            //converts the clipspace into colorspace
 		}
 	</script>
-	<script id="fragmentShader" type="x-shader/x-fragment">
-		precision mediump float;
-		uniform float u_time;
+	<script id="fragmentShader" type="x-shader/x-fragment">#version 300 es
+        #define PI 3.14159265359
+
+		precision highp float;
+
+        out vec4 out_color; //the color that will be drawn. i think only one 'out' in each fragment shader
+        uniform vec2 u_resolution;
+        uniform float u_time;
+
+        in vec4 v_color;
+
+        float plot(vec2 st, float pct) {
+            return smoothstep(pct-0.02, pct, st.y) - smoothstep(pct, pct+0.02, st.y);
+        }
+
 		void main() {
-			gl_FragColor = vec4(u_time, 0.0, 0.0, 1.0);
+            vec2 st = gl_FragCoord.xy/u_resolution;
+            //float y = smoothstep(0.1, 0.9, st.x);
+            //float y = smoothstep(0.2, 0.5, st.x) - smoothstep(0.5, 0.8, st.x);
+            //float y = sin(u_time);
+            //float y = abs(-0.80087849979);
+            float y = abs(sin(u_time / 1000000.0));
+            //float y = u_time;
+            vec3 color = vec3(y);
+
+            float pct = plot(st, y);
+            color = (1.0-pct) * color + pct * vec3(abs(sin(u_time)), 1.0, 0.0);
+            out_color = vec4(color, 1.0);
+
+            //out_color = v_color; //interpolated
+
 		}
 	</script>
 	<script src="initShaders.js"></script>
